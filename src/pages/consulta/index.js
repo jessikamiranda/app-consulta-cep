@@ -1,17 +1,39 @@
-import React from 'react';
-import { StyleSheet, Text, TextInput, View, TouchableOpacity, Image } from 'react-native';
+import React, {useState} from 'react';
+import { StyleSheet, Text, TextInput, View, TouchableOpacity, Image, Keyboard } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons'; 
 
-export default function consulta() {
-
-    navigation = useNavigation();
+function consulta(){
+  navigation = useNavigation();
 
     function voltar(){
         navigation.goBack();
     }
 
-  return (
+  //state para armazenar o cep
+  let [cep, setCep] = useState('');
+  let [cepUsuario, setCepUsuario] = useState(null);
+
+  //função que busca o cep
+  async function buscarCep(){
+    if (cep == '') {
+      alert("Digite um CEP válido!");
+      setCep('');
+      setCepUsuario(null);
+    }
+    try {
+      const response = await api.get('/'+cep+'json/');
+      console.log(response.data);
+      setCepUsuario(response.data);
+      Keyboard.dismiss();
+    } 
+    catch (erro) {
+      setCepUsuario(null);
+      alert("O cep não foi encontrado!");
+    }
+  }
+
+  return(
     <View style={styles.container}>
 
       <TouchableOpacity style={styles.voltar} onPress={voltar}>
@@ -21,13 +43,15 @@ export default function consulta() {
       <Image style={styles.image} source={require('../../assets/image2.png')}/>
       
       <View style={styles.containerinput}>
-        <TextInput style={styles.input} placeholder="Digite seu CEP"/>
+        <TextInput style={styles.input} placeholder="Digite seu CEP" keyboardType='numeric' value={cep} onChangeText={ (valor) => setCep(valor)} />
 
         <TouchableOpacity style={styles.button}>
-            <MaterialIcons style={styles.icon} name="keyboard-arrow-right" size={24} color="#F5F2F5" />
+            <MaterialIcons style={styles.icon} name="keyboard-arrow-right" size={24} color="#F5F2F5" onPress={buscarCep}/>
         </TouchableOpacity>
       </View>
-      
+
+      {
+      cepUsuario &&
       <View style={styles.resultado}>
         <Text style={styles.textoresultado}>Cep: </Text>
         <Text style={styles.textoresultado}>Logradouro: </Text>
@@ -35,10 +59,12 @@ export default function consulta() {
         <Text style={styles.textoresultado}>Localidade: </Text>
         <Text style={styles.textoresultado}>UF: </Text>
       </View>
-    
+      }
     </View>
-  );
+  )
 }
+
+export default consulta;
 
 const styles = StyleSheet.create({
   container: {
@@ -55,7 +81,6 @@ const styles = StyleSheet.create({
 
   resultado:{
       flex:1,
-      alignItems: 'center',
       padding: 32,
   },
 
@@ -106,6 +131,7 @@ const styles = StyleSheet.create({
   textoresultado:{
       marginBottom: 30,
       fontWeight: "bold",
-      color: '#020202'
+      color: '#020202',
+      fontSize: 16,
   },
 });
